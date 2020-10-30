@@ -1,0 +1,52 @@
+import os
+import random
+import csv
+
+import discord
+from discord.ext import commands
+from dotenv import load_dotenv
+
+bad_jokes_short = []
+bad_jokes_long = []
+with open('funjokes.csv') as csv_file:
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    for row in csv_reader:
+        if row[1] != 'Joke':
+            if len(row[1]) < 100:
+                bad_jokes_short.append(row[1])
+            else:
+                bad_jokes_long.append(row[1])
+
+originals = []
+for dir_, _, files in os.walk("originals"):
+    for file_name in files:
+        rel_file = os.path.join("originals", file_name)
+        originals.append(rel_file)
+
+print("short : {}, long : {}, originals : {} Jokes Loaded".format(len(bad_jokes_short), len(bad_jokes_long), len(originals)))
+
+load_dotenv()
+TOKEN = os.getenv('DISCORD_TOKEN')
+
+bot = commands.Bot(command_prefix='!')
+
+@bot.event
+async def on_ready():
+    print(f'{bot.user.name} has connected to Discord!')
+
+@bot.command(name='joke')
+async def joke(ctx):
+        response = random.choice(bad_jokes_short)
+        await ctx.send(response)
+
+@bot.command(name='long')
+async def long(ctx):
+        response = random.choice(bad_jokes_long)
+        await ctx.send(response)
+
+@bot.command(name='original')
+async def original(ctx):
+        response = random.choice(originals)
+        await ctx.send(file=discord.File(response))
+
+bot.run(TOKEN)
